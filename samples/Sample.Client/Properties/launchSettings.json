@@ -1,0 +1,16 @@
+﻿{
+  "profiles": {
+    "Sample.Client": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Debug",
+        "ASPNETCORE_URLS": "http://*:2001;http://*:2002",
+        "APPLICATION_NAME": "Sample.Client",
+        "APPLICATION_INSTANCE": "local",
+        "HOST_NAME": "localhost"
+      }
+    }
+  }
+}
