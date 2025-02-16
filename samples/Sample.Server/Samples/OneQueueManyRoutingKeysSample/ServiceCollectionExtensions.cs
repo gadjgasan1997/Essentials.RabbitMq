@@ -77,6 +77,7 @@ public static class ServiceCollectionExtensions
                 configureQueue: queueBuilder => queueBuilder.Durable().BindToAmqDirectDefault(),
                 configureSubscription: subscriptionConfigurator =>
                     subscriptionConfigurator
+                        .WithFeatureFlag("TestInEventFlag")
                         .WithJsonContentType()
                         .AttachDefaultMetricsBehavior()
                         .WhenHeadersAreEqual(

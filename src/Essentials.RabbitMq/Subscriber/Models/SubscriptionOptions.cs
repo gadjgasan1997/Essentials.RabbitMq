@@ -12,6 +12,7 @@ internal class SubscriptionOptions
         ContentType contentType,
         ushort prefetchCount,
         IEnumerable<Type> behaviors,
+        string? featureFlag = null,
         Func<IServiceProvider, IEvent, Task>? handler = null,
         Type? handlerToRegister = null,
         Func<string, HashSet<MessageHeader>, bool>? whenPredicate = null)
@@ -20,6 +21,7 @@ internal class SubscriptionOptions
         ContentType = contentType;
         PrefetchCount = prefetchCount;
         Behaviors = behaviors;
+        FeatureFlag = featureFlag;
         Handler = handler;
         HandlerToRegister = handlerToRegister;
         WhenPredicate = whenPredicate;
@@ -44,6 +46,11 @@ internal class SubscriptionOptions
     /// Список перехватчиков
     /// </summary>
     public IEnumerable<Type> Behaviors { get; }
+    
+    /// <summary>
+    /// Флаг, который должен быть активирован, чтобы обработчик работал
+    /// </summary>
+    public string? FeatureFlag { get; }
     
     /// <summary>
     /// Обработчик события

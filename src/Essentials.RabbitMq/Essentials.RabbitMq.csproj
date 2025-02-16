@@ -24,6 +24,7 @@
         <PackageReference Include="Essentials.Logging" Version="1.1.0" />
         <PackageReference Include="Essentials.Serialization" Version="1.2.0" />
         <PackageReference Include="Essentials.Utils" Version="1.1.4" />
+        <PackageReference Include="Microsoft.FeatureManagement" Version="4.0.0" />
         <PackageReference Include="Polly" Version="8.3.1" />
         <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
         <PackageReference Include="Scrutor" Version="4.2.2" />

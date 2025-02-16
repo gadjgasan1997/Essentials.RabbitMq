@@ -15,9 +15,17 @@ internal class SubscriptionConfigurator<TEvent> : ISubscriptionConfigurator<TEve
     private ContentType? _contentType;
     private ushort? _prefetchCount;
     private readonly List<Type> _behaviors = [];
+    private string? _featureFlag;
     private Func<string, HashSet<MessageHeader>, bool>? _whenPredicate;
     private Func<IServiceProvider, IEvent, Task>? _handler;
     private Type? _handlerToRegister;
+    
+    /// <inheritdoc cref="ISubscriptionConfigurator{TEvent}.WithFeatureFlag" />
+    public ISubscriptionConfigurator<TEvent> WithFeatureFlag(string featureFlag)
+    {
+        _featureFlag = featureFlag;
+        return this;
+    }
     
     /// <inheritdoc cref="ISubscriptionConfigurator{TEvent}.WithJsonContentType" />
     public ISubscriptionConfigurator<TEvent> WithJsonContentType()
@@ -169,6 +177,7 @@ internal class SubscriptionConfigurator<TEvent> : ISubscriptionConfigurator<TEve
             _contentType ?? ContentType.Json,
             _prefetchCount ?? 5,
             _behaviors,
+            _featureFlag,
             _handler,
             _handlerToRegister,
             _whenPredicate);

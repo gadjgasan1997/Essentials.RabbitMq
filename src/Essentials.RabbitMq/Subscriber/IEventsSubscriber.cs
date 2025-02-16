@@ -15,7 +15,7 @@ public interface IEventsSubscriber
     /// <param name="key">Ключ подписки на событие</param>
     /// <typeparam name="TEvent">Тип события</typeparam>
     /// <returns></returns>
-    Try<Unit> Subscribe<TEvent>(SubscriptionKey key)
+    TryAsync<Unit> SubscribeAsync<TEvent>(SubscriptionKey key)
         where TEvent : IEvent;
     
     /// <summary>
@@ -25,6 +25,6 @@ public interface IEventsSubscriber
     /// <param name="configure">Действие конфигурации опций подписки</param>
     /// <typeparam name="TEvent">Тип события</typeparam>
     /// <returns></returns>
-    Try<Unit> Subscribe<TEvent>(SubscriptionKey key, Action<ISubscriptionConfigurator<TEvent>> configure)
+    TryAsync<Unit> SubscribeAsync<TEvent>(SubscriptionKey key, Action<ISubscriptionConfigurator<TEvent>> configure)
         where TEvent : IEvent;
 }

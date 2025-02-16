@@ -13,6 +13,13 @@ public interface ISubscriptionConfigurator<out TEvent>
     where TEvent : IEvent
 {
     /// <summary>
+    /// Активирует подписку на событие только при включенным флаге
+    /// </summary>
+    /// <param name="featureFlag">Флаг</param>
+    /// <returns>Билдер подписки на событие</returns>
+    ISubscriptionConfigurator<TEvent> WithFeatureFlag(string featureFlag);
+    
+    /// <summary>
     /// Устанавливает тип содержимого для сообщения <see cref="ContentType.Json" />
     /// </summary>
     /// <returns>Билдер подписки на событие</returns>

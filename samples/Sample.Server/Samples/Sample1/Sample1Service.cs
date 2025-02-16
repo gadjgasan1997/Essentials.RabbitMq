@@ -33,14 +33,14 @@ public class Sample1Service
     private void RunSample1()
     {
         var result = _eventsSubscriber
-            .Subscribe<TestInEvent>(SubscriptionKey.Create("esb", "esb-queue"))
+            .SubscribeAsync<TestInEvent>(SubscriptionKey.Create("esb", "esb-queue"))
             .IfFailThrow();
     }
 
     private void RunSample2()
     {
         var result = _eventsSubscriber
-            .Subscribe<TestInEvent>(
+            .SubscribeAsync<TestInEvent>(
                 SubscriptionKey.Create("esb", "esb-queue"),
                 configure: configurator =>
                     configurator
@@ -54,7 +54,7 @@ public class Sample1Service
     private void RunSample3()
     {
         var result = _eventsSubscriber
-            .Subscribe<TestInEvent>(
+            .SubscribeAsync<TestInEvent>(
                 SubscriptionKey.Create("esb", "esb-queue"),
                 configure: configurator =>
                     configurator
@@ -68,7 +68,7 @@ public class Sample1Service
     private void RunSample4()
     {
         var result = _eventsSubscriber
-            .Subscribe<TestInEvent>(
+            .SubscribeAsync<TestInEvent>(
                 SubscriptionKey.Create("esb", "esb-queue"),
                 configure: configurator =>
                     configurator

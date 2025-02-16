@@ -1,6 +1,7 @@
 ﻿using LanguageExt;
-using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
+using Microsoft.FeatureManagement;
+using Microsoft.Extensions.Logging;
 using Essentials.Utils.Extensions;
 using Essentials.Logging.Extensions;
 using Essentials.Functional.Extensions;
@@ -8,6 +9,7 @@ using Essentials.RabbitMq.Subscriber.Models;
 using Essentials.RabbitMq.Subscriber.Extensions;
 using Essentials.RabbitMq.Subscriber.Configuration.Builders;
 using static Essentials.Serialization.Helpers.JsonHelpers;
+using static LanguageExt.Prelude;
 using static System.Environment;
 // ReSharper disable ConvertToLambdaExpression
 
@@ -20,15 +22,18 @@ internal class InternalEventsSubscriber
 {
     private readonly IConnectionsService _connectionsService;
     private readonly IEventsHandlerService _eventsHandlerService;
+    private readonly IFeatureManager _featureManager;
     private readonly ILogger _logger;
     
     public InternalEventsSubscriber(
         IConnectionsService connectionsService,
         IEventsHandlerService eventsHandlerService,
+        IFeatureManager featureManager,
         ILoggerFactory loggerFactory)
     {
         _connectionsService = connectionsService.CheckNotNull();
         _eventsHandlerService = eventsHandlerService.CheckNotNull();
+        _featureManager = featureManager.CheckNotNull();
         _logger = loggerFactory.CreateLogger("Essentials.RabbitMq.Subscriber");
     }
     
@@ -39,19 +44,19 @@ internal class InternalEventsSubscriber
     /// <param name="configure">Действие конфигурации опций подписки</param>
     /// <typeparam name="TEvent">Тип события</typeparam>
     /// <returns></returns>
-    public Try<Unit> Subscribe<TEvent>(
+    public TryAsync<Unit> SubscribeAsync<TEvent>(
         SubscriptionKey key,
         Action<ISubscriptionConfigurator<TEvent>>? configure = null)
         where TEvent : IEvent
     {
-        return Prelude
-            .Try(() =>
+        return Try(() =>
             {
                 var configurator = new SubscriptionConfigurator<TEvent>();
                 configure?.Invoke(configurator);
                 return configurator.BuildSubscriptionOptions();
             })
-            .Bind(options => SubscribeWithExistingOptions<TEvent>(key, options));
+            .ToAsync()
+            .Bind(options => SubscribeWithExistingOptionsAsync<TEvent>(key, options));
     }
     
     /// <summary>
@@ -61,24 +66,44 @@ internal class InternalEventsSubscriber
     /// <param name="options">Опции подписки на событие</param>
     /// <typeparam name="TEvent">Тип события</typeparam>
     /// <returns></returns>
-    public Try<Unit> SubscribeWithExistingOptions<TEvent>(
+    public TryAsync<Unit> SubscribeWithExistingOptionsAsync<TEvent>(
         SubscriptionKey key,
         SubscriptionOptions options)
         where TEvent : IEvent
     {
-        return Prelude
-            .Try(() =>
-            {
-                _eventsHandlerService.RegisterEventHandler<TEvent>(key, options);
-                return Unit.Default;
-            })
-            .Map(_ =>
-            {
-                _connectionsService.Consume(key, options, ConsumerReceived);
-                return Unit.Default;
-            });
+        return CheckFeatureIsEnabledAsync(key, options)
+            .Do(_ => _eventsHandlerService.RegisterEventHandler<TEvent>(key, options))
+            .Do(_ => _connectionsService.Consume(key, options, ConsumerReceived))
+            .ToTry(() => Unit.Default);
     }
-
+    
+    private TryOptionAsync<Unit> CheckFeatureIsEnabledAsync(SubscriptionKey key, SubscriptionOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.FeatureFlag))
+            return TryOptionAsync(Unit.Default);
+        
+        return TryOptionAsync(async () =>
+        {
+            if (await _featureManager.IsEnabledAsync(options.FeatureFlag))
+                return Unit.Default;
+            
+            OnFeatureIsDisabled(options.FeatureFlag, key);
+            return Option<Unit>.None;
+        });
+    }
+    
+    private void OnFeatureIsDisabled(string featureFlag, SubscriptionKey key)
+    {
+        _logger.LogIfLevelIsWarnOrLow(() =>
+        {
+            _logger.LogWarning(
+                "Сообщения из очереди '{queueName}' в соединении '{connectionName}' " +
+                "по флагу '{featureFlag}' вычитываться не будут. " +
+                "Включите флаг если требуется обрабатывать данные сообщения",
+                key.QueueName.Value, key.ConnectionName.Value, featureFlag);
+        });
+    }
+    
     private async Task ConsumerReceived(object sender, BasicDeliverEventArgs eventArgs)
     {
         if (sender is not AsyncEventingBasicConsumer consumer)
@@ -92,8 +117,7 @@ internal class InternalEventsSubscriber
             return;
         }
         
-        _ = await Prelude
-            .TryOptionAsync(async () =>
+        _ = await TryOptionAsync(async () =>
             {
                 var key = SubscriptionKey.Create(eventArgs);
                 
