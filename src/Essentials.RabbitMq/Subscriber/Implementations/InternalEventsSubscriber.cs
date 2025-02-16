@@ -49,12 +49,7 @@ internal class InternalEventsSubscriber
         Action<ISubscriptionConfigurator<TEvent>>? configure = null)
         where TEvent : IEvent
     {
-        return Try(() =>
-            {
-                var configurator = new SubscriptionConfigurator<TEvent>();
-                configure?.Invoke(configurator);
-                return configurator.BuildSubscriptionOptions();
-            })
+        return Try(() => new SubscriptionConfigurator<TEvent>().BuildOptions(configure))
             .ToAsync()
             .Bind(options => SubscribeWithExistingOptionsAsync<TEvent>(key, options));
     }

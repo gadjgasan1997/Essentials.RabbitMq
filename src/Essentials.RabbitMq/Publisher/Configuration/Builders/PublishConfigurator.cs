@@ -105,9 +105,12 @@ internal class PublishConfigurator<TEvent> : IPublishConfigurator<TEvent>
     /// <summary>
     /// Билдит опции публикации события
     /// </summary>
-    /// <returns>Опции публикации события</returns>
-    public PublishOptions BuildPublishOptions()
+    /// <param name="configure">Действие конфигурации</param>
+    /// <returns>Опции</returns>
+    public PublishOptions BuildOptions(Action<IPublishConfigurator<TEvent>>? configure = null)
     {
+        configure?.Invoke(this);
+        
         return new PublishOptions(
             _contentType ?? ContentType.Json,
             _retryCount ?? 5,

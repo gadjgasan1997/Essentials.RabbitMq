@@ -45,7 +45,7 @@ internal class EventsPublisher : IEventsPublisher
     {
         return async () =>
         {
-            var options = new PublishConfigurator<TEvent>().BuildPublishOptions();
+            var options = new PublishConfigurator<TEvent>().BuildOptions();
             return await PublishCoreAsync(@event, key, options).Try();
         };
     }
@@ -59,10 +59,7 @@ internal class EventsPublisher : IEventsPublisher
     {
         return async () =>
         {
-            var configurator = new PublishConfigurator<TEvent>();
-            configure.Invoke(configurator);
-            var options = configurator.BuildPublishOptions();
-            
+            var options = new PublishConfigurator<TEvent>().BuildOptions(configure);
             return await PublishCoreAsync(@event, key, options).Try();
         };
     }
@@ -86,11 +83,7 @@ internal class EventsPublisher : IEventsPublisher
         return async () =>
         {
             var key = GetPublishKey<TEvent>();
-            
-            var configurator = new PublishConfigurator<TEvent>();
-            configure.Invoke(configurator);
-            var options = configurator.BuildPublishOptions();
-            
+            var options = new PublishConfigurator<TEvent>().BuildOptions(configure);
             return await PublishCoreAsync(@event, key, options).Try();
         };
     }

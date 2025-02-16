@@ -169,9 +169,12 @@ internal class SubscriptionConfigurator<TEvent> : ISubscriptionConfigurator<TEve
     /// <summary>
     /// Билдит опции подписки на событие
     /// </summary>
-    /// <returns>Опции подписки на событие</returns>
-    public SubscriptionOptions BuildSubscriptionOptions()
+    /// <param name="configure">Действие конфигурации</param>
+    /// <returns>Опции</returns>
+    public SubscriptionOptions BuildOptions(Action<ISubscriptionConfigurator<TEvent>>? configure = null)
     {
+        configure?.Invoke(this);
+        
         return new SubscriptionOptions(
             typeof(TEvent),
             _contentType ?? ContentType.Json,

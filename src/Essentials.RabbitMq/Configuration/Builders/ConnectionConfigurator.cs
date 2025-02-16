@@ -38,10 +38,7 @@ internal class ConnectionConfigurator : IConnectionConfigurator
         where TEvent : IEvent
     {
         var key = new PublishKey(_connectionName, exchangeName, routingKey);
-        
-        var configurator = new PublishConfigurator<TEvent>();
-        configure?.Invoke(configurator);
-        var options = configurator.BuildPublishOptions();
+        var options = new PublishConfigurator<TEvent>().BuildOptions(configure);
         
         Set<TEvent>(key, options);
         return this;
@@ -58,10 +55,7 @@ internal class ConnectionConfigurator : IConnectionConfigurator
             _modelsBuilder.DeclareQueue(queueName, configureQueue);
         
         var key = SubscriptionKey.Create(_connectionName, queueName);
-        
-        var configurator = new SubscriptionConfigurator<TEvent>();
-        configureSubscription?.Invoke(configurator);
-        var options = configurator.BuildSubscriptionOptions();
+        var options = new SubscriptionConfigurator<TEvent>().BuildOptions(configureSubscription);
         
         Set<TEvent>(key, options);
         return this;
