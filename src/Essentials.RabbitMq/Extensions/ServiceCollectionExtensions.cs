@@ -53,7 +53,7 @@ public static class ServiceCollectionExtensions
             .ConfigureRabbitMqConnectionFactory(configuration)
             .ConfigureRabbitMqModelsBuilders()
             .ConfigureRabbitMqEventsPublisher()
-            .ConfigureRabbitMqEventsSubscriber()
+            .ConfigureRabbitMqEventsSubscriber(configuration)
             .ConfigureRabbitMqRpcCaller();
         
         services.TryAddTransient<IMessageSerializer, MessageSerializer>();

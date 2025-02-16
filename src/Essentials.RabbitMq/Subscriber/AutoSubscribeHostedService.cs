@@ -25,11 +25,11 @@ internal class AutoSubscribeHostedService : IHostedService
         _logger = logger;
     }
     
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         try
         {
-            SubscribeForEvents();
+            await SubscribeForEvents();
         }
         catch (Exception exception)
         {
@@ -39,28 +39,26 @@ internal class AutoSubscribeHostedService : IHostedService
             
             throw;
         }
-        
-        return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     
-    private void SubscribeForEvents()
+    private async Task SubscribeForEvents()
     {
         var method = typeof(InternalEventsSubscriber)
             .GetMethod(
-                nameof(InternalEventsSubscriber.SubscribeWithExistingOptions),
+                nameof(InternalEventsSubscriber.SubscribeWithExistingOptionsAsync),
                 bindingAttr: BindingFlags.Instance | BindingFlags.Public);
 
         method.CheckNotNull(
-            $"Не найден метод с названием '{nameof(InternalEventsSubscriber.SubscribeWithExistingOptions)}' " +
+            $"Не найден метод с названием '{nameof(InternalEventsSubscriber.SubscribeWithExistingOptionsAsync)}' " +
             "для автоматической подписки на события");
 
         foreach (var (eventType, key, options) in new Storage())
-            SubscribeForEvent(method, eventType, key, options);
+            await SubscribeForEvent(method, eventType, key, options);
     }
     
-    private void SubscribeForEvent(
+    private async Task SubscribeForEvent(
         MethodInfo method,
         Type eventType,
         SubscriptionKey key,
@@ -71,14 +69,14 @@ internal class AutoSubscribeHostedService : IHostedService
             var genericMethod = method.MakeGenericMethod(eventType);
             
             var result = genericMethod.Invoke(_eventsSubscriber, [key, options]);
-            if (result is not Try<Unit> @try)
+            if (result is not TryAsync<Unit> @try)
             {
                 throw new InvalidOperationException(
-                    $"Результат вызова метода '{nameof(InternalEventsSubscriber.SubscribeWithExistingOptions)}' " +
-                    $"не соответствует типу '{nameof(Try<Unit>)}'");
+                    $"Результат вызова метода '{nameof(InternalEventsSubscriber.SubscribeWithExistingOptionsAsync)}' " +
+                    $"не соответствует типу '{nameof(TryAsync<Unit>)}'");
             }
             
-            _ = @try.IfFailThrow();
+            _ = await @try.IfFailThrow();
         }
         catch (Exception exception)
         {
